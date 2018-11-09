@@ -8,7 +8,7 @@ features
 - 1v1 and nvn simulation
 - reasonably fast
 
-install
+build
 
 1. get rust nightly (<https://rustup.rs/>)
 2. run `cargo build --release`
@@ -30,3 +30,12 @@ json config example
   'bar.uo': 10
 }
 ```
+
+performance
+
+```
+test tests::bench_simulate ... bench:     371,554 ns/iter (+/- 16,269)
+```
+
+`tests::bench_simulate` runs `simulate()` 1000 times, so this adds up to
+simulating close to 2.7 million games a second.
