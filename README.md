@@ -18,7 +18,7 @@ todo
 - [x] implement 1v1 simulator
 - [x] implement NvN simulator (based on JSON config)
 - [ ] break out into library with cli (& webui?)
-- [ ] benchmark + improve performance
+- [x] benchmark + improve performance
 - [ ] port implmentation to CUDA?
 - [ ] explore genetic algorithms?
 
