@@ -12,9 +12,9 @@ use tobiuo::{parse_dfa, simulate, simulate_nvn, CompressedState};
 use std::fs::File;
 use std::io::prelude::*;
 
-const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-const USAGE: &'static str = "
+const USAGE: &str = "
 tobiuo - yet another osakana simulator
 
 Usage:
@@ -45,9 +45,9 @@ fn read_file(filename: &str) -> String {
     let mut contents = String::new();
 
     File::open(filename)
-        .expect(&format!("Error opening file {}", filename))
+        .unwrap_or_else(|_| panic!("Error opening file {}", filename))
         .read_to_string(&mut contents)
-        .expect(&format!("Error reading file {}", filename));
+        .unwrap_or_else(|_| panic!("Error reading file {}", filename));
 
     contents
 }
@@ -58,7 +58,7 @@ fn load_dfa(filename: &str) -> Vec<CompressedState> {
     parse_dfa(&contents).expect(&format!("Error parsing readingfile {}", filename))
 }
 
-fn run(player1: &Vec<CompressedState>, player2: &Vec<CompressedState>, turns: u8) {
+fn run(player1: &[CompressedState], player2: &[CompressedState], turns: u8) {
     println!("{} turns:", turns);
     let scores = simulate(player1, player2, turns);
     println!("player1 score: {}", scores.0);
@@ -81,7 +81,8 @@ fn parse_nvn_config(filename: &str) -> Vec<(String, Vec<CompressedState>, u16)> 
             let dfa = load_dfa(&filename);
             let number = value
                 .as_u64()
-                .expect(&format!("Invalid number: {:?}", value)) as u16;
+                .unwrap_or_else(|| panic!("Invalid number: {:?}", value))
+                as u16;
             if number == 0 {
                 panic!("There should be at least 1 of each dfa");
             }
@@ -112,7 +113,7 @@ fn main() {
         if args.flag_all_turns {
             for turns in 95..=105 {
                 run(&player1, &player2, turns);
-                println!("");
+                println!();
             }
         } else {
             run(&player1, &player2, args.flag_turns);
@@ -123,7 +124,7 @@ fn main() {
         if args.flag_all_turns {
             for turns in 95..=105 {
                 run_nvn(&nvn_states, turns);
-                println!("");
+                println!();
             }
         } else {
             run_nvn(&nvn_states, args.flag_turns);

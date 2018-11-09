@@ -1,3 +1,7 @@
+#![feature(test)]
+#![feature(extern_crate_item_prelude)]
+extern crate test;
+
 #[macro_use]
 extern crate nom;
 use nom::types::CompleteStr;
@@ -65,14 +69,11 @@ fn pack(states: Vec<State>) -> Vec<CompressedState> {
         .into_iter()
         .map(
             |State {
-                 index: _,
-                 action,
-                 go,
-                 wait,
+                 action, go, wait, ..
              }| CompressedState {
-                action: action,
-                go: *index_lookup.get(&go).unwrap(),
-                wait: *index_lookup.get(&wait).unwrap(),
+                action,
+                go: index_lookup[&go],
+                wait: index_lookup[&wait],
             },
         )
         .collect()
@@ -89,15 +90,11 @@ fn next_state(state: &CompressedState, opponent_action: &Action) -> u16 {
     }
 }
 
-pub fn simulate(
-    player1: &Vec<CompressedState>,
-    player2: &Vec<CompressedState>,
-    turns: u8,
-) -> (i64, i64) {
+pub fn simulate(player1: &[CompressedState], player2: &[CompressedState], turns: u8) -> (i64, i64) {
     let mut scores = (0, 0);
     let mut state: (u16, u16) = (0, 0);
     for _ in 0..turns {
-        let player1_state = &player1[state.0 as usize]; // TODO: check is unsafe is faster
+        let player1_state = &player1[state.0 as usize];
         let player2_state = &player2[state.1 as usize];
         let diff = match (&player1_state.action, &player2_state.action) {
             (Action::Go, Action::Go) => (-1, -1),
@@ -113,7 +110,7 @@ pub fn simulate(
     scores
 }
 
-pub fn simulate_nvn(states: &Vec<(String, Vec<CompressedState>, u16)>, turns: u8) -> Vec<i64> {
+pub fn simulate_nvn(states: &[(String, Vec<CompressedState>, u16)], turns: u8) -> Vec<i64> {
     // points[player1][player2] corresponds to the score of player1 when playing against player2.
     let mut points = vec![vec![0; states.len()]; states.len()];
     for player1 in 0..states.len() {
@@ -126,7 +123,7 @@ pub fn simulate_nvn(states: &Vec<(String, Vec<CompressedState>, u16)>, turns: u8
     let mut ret = vec![0; states.len()];
     for player in 0..states.len() {
         for opponent in 0..states.len() {
-            let mut number_of_opponents = states[opponent].2 as i64;
+            let mut number_of_opponents = i64::from(states[opponent].2);
             if player == opponent {
                 number_of_opponents -= 1;
             }
@@ -138,8 +135,17 @@ pub fn simulate_nvn(states: &Vec<(String, Vec<CompressedState>, u16)>, turns: u8
 
 #[cfg(test)]
 mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
+    use super::*;
+    use test::{black_box, Bencher};
+
+    #[bench]
+    fn bench_simulate(b: &mut Bencher) {
+        let dfa = parse_dfa(include_str!("../../samples/test.uo")).unwrap();
+
+        b.iter(|| {
+            for _ in 0..1000 {
+                black_box(simulate(&dfa, &dfa, 100));
+            }
+        })
     }
 }
